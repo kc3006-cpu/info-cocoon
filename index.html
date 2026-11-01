@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>信息茧房 · Presentation</title>
+<style>
+  /* ── indigo-porcelain tokens ── */
+  :root {
+    --shell:        #e4e8ec;
+    --surface:      #f1f3f5;
+    --surface-2:    #f8fafc;
+    --surface-3:    #e7ebef;
+    --text:         #0a1f3d;
+    --text-2:       #152a4a;
+    --text-mute:    #4a5a78;
+    --text-faint:   #8595ad;
+    --rule:         #c6cdd6;
+    --accent:       #1e3a8a;
+    --accent-soft:  rgba(30, 58, 138, 0.10);
+    --accent-glow:  rgba(30, 58, 138, 0.30);
+    --font-display-cn: "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
+    --font-display-en: "Playfair Display", "GT Sectra", "Bodoni 72", "Times New Roman", serif;
+    --font-body:       "IBM Plex Sans", "Noto Sans SC", -apple-system, "PingFang SC", sans-serif;
+    --font-mono:       "IBM Plex Mono", ui-monospace, monospace;
+    --dur-base:       680ms;
+    --dur-slow:       1050ms;
+    --dur-cinematic:  1550ms;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--shell);
+    font-family: var(--font-body);
+    color: var(--text);
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .frame { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .stage-wrap {
+    position: relative;
+    width: min(100vw, calc(100vh * 16 / 9));
+    aspect-ratio: 16 / 9;
+    box-shadow: 0 60px 160px rgba(10, 31, 61, 0.20), 0 0 0 1px rgba(10, 31, 61, 0.04);
+  }
+  .stage {
+    position: absolute; inset: 0;
+    background: var(--surface);
+    overflow: hidden;
+    padding: 92px 130px;
+  }
+  .stage::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(10,31,61,0.015) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(10,31,61,0.015) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .progress { position: absolute; bottom: 24px; left: 130px; right: 130px; height: 2px; background: var(--rule); opacity: 0; transition: opacity 300ms ease; z-index: 50; }
+  .stage-wrap:hover .progress { opacity: 1; }
+  .progress-fill { height: 100%; background: var(--accent); transition: width 500ms cubic-bezier(.2,.8,.2,1); }
+  .step-indicator { position: absolute; top: 24px; right: 40px; font-family: var(--font-mono); font-size: 12px; color: var(--text-faint); letter-spacing: 0.1em; opacity: 0; transition: opacity 300ms ease; z-index: 50; }
+  .stage-wrap:hover .step-indicator { opacity: 1; }
+  .click-left, .click-right { position: absolute; top: 0; bottom: 0; width: 33%; z-index: 40; cursor: pointer; }
+  .click-left  { left: 0; cursor: w-resize; }
+  .click-right { right: 0; cursor: e-resize; }
+  .next-hint { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-family: var(--font-body); font-size: 11px; color: var(--text-faint); letter-spacing: 0.3em; text-transform: uppercase; opacity: 0; transition: opacity 400ms ease; z-index: 50; }
+  .stage-wrap:hover .next-hint { opacity: 1; }
+
+  /* 每个 step 容器 —— 精确列出 20 个，不搞通配，避免误伤内部子元素 */
+  .step-1, .step-2, .step-3, .step-4, .step-5,
+  .step-6, .step-7, .step-8, .step-9, .step-10,
+  .step-11, .step-12, .step-13, .step-14, .step-15,
+  .step-16, .step-17, .step-18, .step-19, .step-20 {
+    position: absolute; inset: 0; opacity: 0; transition: opacity var(--dur-slow) ease;
+  }
+  body[data-step="1"]  .step-1  { opacity: 1; }
+  body[data-step="2"]  .step-2  { opacity: 1; }
+  body[data-step="3"]  .step-3  { opacity: 1; }
+  body[data-step="4"]  .step-4  { opacity: 1; }
+  body[data-step="5"]  .step-5  { opacity: 1; }
+  body[data-step="6"]  .step-6  { opacity: 1; }
+  body[data-step="7"]  .step-7  { opacity: 1; }
+  body[data-step="8"]  .step-8  { opacity: 1; }
+  body[data-step="9"]  .step-9  { opacity: 1; }
+  body[data-step="10"] .step-10 { opacity: 1; }
+  body[data-step="11"] .step-11 { opacity: 1; }
+  body[data-step="12"] .step-12 { opacity: 1; }
+  body[data-step="13"] .step-13 { opacity: 1; }
+  body[data-step="14"] .step-14 { opacity: 1; }
+  body[data-step="15"] .step-15 { opacity: 1; }
+  body[data-step="16"] .step-16 { opacity: 1; }
+  body[data-step="17"] .step-17 { opacity: 1; }
+  body[data-step="18"] .step-18 { opacity: 1; }
+  body[data-step="19"] .step-19 { opacity: 1; }
+  body[data-step="20"] .step-20 { opacity: 1; }
+
+  /* ═══════════════════════════════════════════════
+     STEP 1 — 钩子开场（完全不动，原版保留）
+  ═══════════════════════════════════════════════ */
+  .step-1 { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 90px; }
+  .step-1-label { font-family: var(--font-body); font-size: 18px; color: var(--text-mute); letter-spacing: 0.25em; text-transform: uppercase; opacity: 0; transform: translateY(20px); transition: all var(--dur-slow) ease 1200ms; }
+  body[data-step="1"] .step-1-label { opacity: 1; transform: translateY(0); }
+  .platforms { display: flex; gap: 140px; }
+  .platform { display: flex; flex-direction: column; align-items: center; gap: 28px; opacity: 0; transform: translateY(30px); transition: all var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  .platform:nth-child(1) { transition-delay: 200ms; }
+  .platform:nth-child(2) { transition-delay: 400ms; }
+  .platform:nth-child(3) { transition-delay: 600ms; }
+  body[data-step="1"] .platform { opacity: 1; transform: translateY(0); }
+  .logo-wrap { width: 130px; height: 130px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 rgba(10,31,61,0.08), 0 18px 40px rgba(10,31,61,0.18); }
+  .logo-wrap img { width: 68%; height: 68%; filter: brightness(0) invert(1); display: block; }
+  .logo-douyin { background: radial-gradient(ellipse at 65% 30%, #25f4ee 0%, transparent 45%), radial-gradient(ellipse at 30% 70%, #fe2c55 0%, transparent 45%), #000; }
+  .logo-bilibili { background: linear-gradient(135deg, #00a1d6 0%, #fb7299 100%); }
+  .logo-kuaishou { background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%); }
+  .platform-name { font-family: var(--font-body); font-size: 15px; color: var(--text-mute); letter-spacing: 0.15em; }
+
+  /* ═══════════════════════════════════════════════
+     STEP 2 — 手指滑动 + 视频网格（原版保留）
+  ═══════════════════════════════════════════════ */
+  .step-2 { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 50px; }
+  .finger-swipe { position: absolute; top: 50%; left: 10%; width: 70px; height: 70px; transform: translateY(-50%); opacity: 0; pointer-events: none; z-index: 20; }
+  body[data-step="2"] .finger-swipe { animation: swipe 2.8s ease-in-out infinite; }
+  @keyframes swipe { 0% { left: 2%; opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { left: 86%; opacity: 0; } }
+  .video-grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(3, 1fr); gap: 14px; width: 78%; aspect-ratio: 16 / 6; }
+  .video-tile { position: relative; border-radius: 6px; overflow: hidden; background-size: cover; background-position: center; box-shadow: 0 2px 0 rgba(10,31,61,0.06); }
+  .vt-duration { position: absolute; bottom: 6px; right: 6px; font-family: var(--font-mono); font-size: 11px; color: #fff; background: rgba(0,0,0,0.7); padding: 2px 5px; border-radius: 2px; backdrop-filter: blur(4px); }
+  .vt-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; opacity: 0; transition: all 300ms ease; }
+  .video-tile:hover .vt-play { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .vt-play svg { width: 14px; height: 14px; fill: var(--text); margin-left: 2px; }
+  .vt-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.55) 100%); pointer-events: none; }
+  .vt-title { position: absolute; bottom: 6px; left: 8px; right: 70px; font-family: var(--font-body); font-size: 12px; font-weight: 500; color: #fff; line-height: 1.3; text-shadow: 0 1px 2px rgba(0,0,0,0.6); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .vt-author { position: absolute; top: 6px; left: 6px; display: flex; align-items: center; gap: 5px; }
+  .vt-avatar { width: 20px; height: 20px; border-radius: 50%; background: var(--rule); border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 0 0 1px rgba(0,0,0,0.1); }
+  .vt-author-name { font-family: var(--font-body); font-size: 10px; color: rgba(255,255,255,0.95); text-shadow: 0 1px 2px rgba(0,0,0,0.6); font-weight: 500; }
+  .vt-1  { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20street%20dance%20teenager%2C%20neon%20city%20background%2C%20vibrant&image_size=landscape_16_9'); }
+  .vt-2  { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Cute%20cat%20playing%20piano%2C%20cozy%20bedroom%2C%20warm%20light&image_size=landscape_16_9'); }
+  .vt-3  { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20chef%20cooking%20in%20wok%2C%20steam%20rising%2C%20kitchen&image_size=landscape_16_9'); }
+  .vt-4  { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Mountain%20sunrise%20mist%20peaks%2C%20golden%20hour&image_size=landscape_16_9'); }
+  .vt-5  { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Anime%20figure%20unboxing%20colorful%20box&image_size=landscape_16_9'); }
+  .vt-6  { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Gaming%20cyberpunk%20neon%20screenshot%20action&image_size=landscape_16_9'); }
+  .vt-7  { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Makeup%20tutorial%20beauty%20closeup%20glamorous&image_size=landscape_16_9'); }
+  .vt-8  { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Street%20basketball%20dunking%20sunset%20urban&image_size=landscape_16_9'); }
+  .vt-9  { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=DIY%20craft%20paper%20creative%20desk%20cozy&image_size=landscape_16_9'); }
+  .vt-10 { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Kids%20science%20experiment%20colorful%20slime&image_size=landscape_16_9'); }
+  .vt-11 { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Mountain%20bike%20extreme%20rock%20trail%20motion%20blur&image_size=landscape_16_9'); }
+  .vt-12 { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Classic%20red%20sportscar%20coastal%20road%20sunset&image_size=landscape_16_9'); }
+  .vt-13 { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Golden%20retriever%20chasing%20butterfly%20grass&image_size=landscape_16_9'); }
+  .vt-14 { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20calligraphy%20brush%20ink%20stone%20rice%20paper&image_size=landscape_16_9'); }
+  .vt-15 { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Astronaut%20floating%20in%20orbit%20blue%20earth&image_size=landscape_16_9'); }
+  .vt-16 { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Acoustic%20guitar%20cafe%20warm%20spotlight%20cozy&image_size=landscape_16_9'); }
+  .vt-17 { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Robot%20prototype%20hardware%20workshop%20screwdrivers&image_size=landscape_16_9'); }
+  .vt-18 { background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Sushi%20chef%20salmon%20nigiri%20wood%20board%20restaurant&image_size=landscape_16_9'); }
+
+  /* ═══════════════════════════════════════════════
+     STEP 3 — 画面融合（原版保留）
+  ═══════════════════════════════════════════════ */
+  .step-3 { display: flex; align-items: center; justify-content: center; }
+  .fusion-grid { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(5, 1fr); gap: 10px; width: 68%; aspect-ratio: 16 / 9; margin-top: -40px; }
+  .fusion-tile { border-radius: 4px; opacity: 0; transform: scale(0.6); transition: all var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  body[data-step="3"] .fusion-tile { opacity: 1; transform: scale(1); }
+  body[data-step="3"] .fusion-tile.fade { background: linear-gradient(135deg, #d5dce6 0%, #c7cfd9 100%) !important; filter: saturate(0.15) brightness(0.95); }
+  .fusion-overlay-text { position: absolute; bottom: 18%; left: 50%; transform: translateX(-50%); font-family: var(--font-display-cn); font-size: 34px; color: var(--text); text-align: center; line-height: 1.7; opacity: 0; transition: opacity var(--dur-slow) ease 1800ms; }
+  body[data-step="3"] .fusion-overlay-text { opacity: 1; }
+
+  /* ═══════════════════════════════════════════════
+     STEP 4 — 信息大爆发 / 内容越来越窄（原版保留）
+  ═══════════════════════════════════════════════ */
+  .step-4 { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 50px; }
+  .hero-line { font-family: var(--font-display-cn); font-size: 88px; font-weight: 500; line-height: 1.15; color: var(--text); text-align: center; opacity: 0; transform: translateY(40px); transition: all var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  .hero-line .accent { color: var(--accent); }
+  .hero-line.en { font-family: var(--font-display-en); font-style: italic; font-size: 110px; letter-spacing: -0.03em; }
+  body[data-step="4"] .hero-line:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0ms; }
+  body[data-step="4"] .hero-line:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 400ms; }
+  body[data-step="4"] .hero-line:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 900ms; }
+
+  /* ═══════════════════════════════════════════════
+     STEP 5 — 信息茧房（原版保留）
+  ═══════════════════════════════════════════════ */
+  .step-5 { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; }
+  .cocoon-wrap { position: relative; display: flex; align-items: center; justify-content: center; width: 680px; height: 680px; }
+  .cocoon-spiral { position: absolute; inset: 0; opacity: 0; transition: opacity var(--dur-cinematic) ease 400ms; }
+  body[data-step="5"] .cocoon-spiral { opacity: 0.55; }
+  .cocoon-title { font-family: var(--font-display-cn); font-size: 120px; font-weight: 500; color: var(--text); letter-spacing: 0.2em; line-height: 1.15; text-align: center; display: flex; flex-direction: column; align-items: center; opacity: 0; transform: scale(0.7); transition: all var(--dur-cinematic) cubic-bezier(.2,.8,.2,1); z-index: 2; }
+  .cocoon-title .line { display: block; white-space: nowrap; }
+  body[data-step="5"] .cocoon-title { opacity: 1; transform: scale(1); }
+  .cocoon-subtitle { font-family: var(--font-display-en); font-style: italic; font-size: 22px; color: var(--text-mute); letter-spacing: 0.25em; margin-top: 10px; opacity: 0; transition: opacity var(--dur-slow) ease 1200ms; z-index: 2; }
+  body[data-step="5"] .cocoon-subtitle { opacity: 1; }
+
+  /* ═══════════════════════════════════════════════
+     STEP 6-8 — CHAPTER 2 BRAINSTORM（从 step 5 之后追加）
+     左文 + 右 4:3 电视机占位（新规范）
+  ═══════════════════════════════════════════════ */
+
+  /* 电视机：缩到 80% 宽度并居中，留右侧留白 */
+  .tv-frame { position: relative; width: 80%; height: auto; display: flex; align-items: center; justify-content: center; }
+  .tv-bezel {
+    width: 100%;
+    /* 4:3 横屏屏幕区 */
+    aspect-ratio: 4 / 3;
+    border-radius: 20px 20px 26px 26px;
+    background: linear-gradient(180deg, #3a3a42 0%, #242430 50%, #181822 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.08),
+      inset 0 -2px 0 rgba(0,0,0,0.5),
+      0 16px 48px rgba(10,31,61,0.25);
+    padding: 16px 18px 22px 18px;
+    display: flex; flex-direction: column;
+  }
+  .tv-grille { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 48%; height: 6px; display: flex; gap: 3px; opacity: 0.6; }
+  .tv-grille span { flex: 1; border-radius: 3px; background: repeating-linear-gradient(90deg, #111 0px, #111 2px, #333 2px, #333 4px); }
+  .tv-screen {
+    flex: 1;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #050714 0%, #0a0f20 50%, #020408 100%);
+    box-shadow: inset 0 0 40px rgba(30, 58, 138, 0.15), inset 0 0 100px rgba(0,0,0,0.6);
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tv-screen::before {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px);
+    pointer-events: none;
+  }
+  .tv-screen::after {
+    content: ""; position: absolute; inset: -4%;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.25) 100%);
+    pointer-events: none;
+  }
+  .tv-placeholder { color: var(--text-faint); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.15em; text-align: center; line-height: 1.8; padding: 20px; opacity: 0.45; position: relative; z-index: 1; }
+  .tv-placeholder .hint-line { font-family: var(--font-display-en); font-style: italic; font-size: 20px; color: var(--accent-glow); letter-spacing: 0.1em; margin-bottom: 6px; }
+  .tv-controls { display: flex; align-items: center; justify-content: space-between; padding: 10px 4px 0 4px; font-family: var(--font-mono); font-size: 9px; color: rgba(255,255,255,0.35); letter-spacing: 0.15em; }
+  .tv-knobs { display: flex; gap: 10px; align-items: center; }
+  .tv-knob { width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #7a7a82, #1a1a22 70%); box-shadow: inset 0 2px 3px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.08); }
+  .tv-led { width: 6px; height: 6px; border-radius: 50%; background: #ff5a3a; box-shadow: 0 0 6px #ff5a3a, 0 0 10px rgba(255,90,58,0.5); }
+  .tv-stand { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); width: 38%; height: 10px; background: linear-gradient(180deg, #2d2d38, #15151c); border-radius: 0 0 6px 6px; }
+
+  /* 分屏布局 */
+  .split-layout { display: grid; grid-template-columns: 44% calc(56% - 40px); gap: 40px; height: 100%; padding: 40px 0; }
+  .split-left { display: flex; flex-direction: column; justify-content: center; gap: 28px; padding-left: 30px; }
+  .split-right { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; padding-right: 20px; }
+  .ch-title { font-family: var(--font-body); font-size: 14px; color: var(--accent); letter-spacing: 0.3em; text-transform: uppercase; font-weight: 600; }
+  .ch-headline { font-family: var(--font-display-cn); font-size: 64px; font-weight: 500; line-height: 1.2; color: var(--text); }
+  .ch-headline .line { display: block; }
+  .ch-headline .accent { color: var(--accent); }
+  .ch-headline.en { font-family: var(--font-display-en); font-style: italic; font-size: 30px; color: var(--text-mute); letter-spacing: -0.01em; }
+  .ch-body { font-family: var(--font-body); font-size: 19px; line-height: 1.8; color: var(--text-2); max-width: 500px; }
+
+  /* step 6：开场文字淡入 */
+  .step-6 .ch-title, .step-6 .ch-headline, .step-6 .ch-headline.en, .step-6 .ch-body { opacity: 0; transform: translateY(24px); transition: all var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  body[data-step="6"] .step-6 .ch-title { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+  body[data-step="6"] .step-6 .ch-headline { opacity: 1; transform: translateY(0); transition-delay: 350ms; }
+  body[data-step="6"] .step-6 .ch-headline.en { opacity: 1; transform: translateY(0); transition-delay: 600ms; }
+  body[data-step="6"] .step-6 .ch-body { opacity: 1; transform: translateY(0); transition-delay: 900ms; }
+
+  /* step 7：对话气泡 */
+  .chat-stream { display: flex; flex-direction: column; gap: 14px; }
+  .chat-bubble { max-width: 90%; padding: 14px 18px; border-radius: 14px; font-family: var(--font-body); font-size: 16px; line-height: 1.6; position: relative; opacity: 0; transform: translateY(16px); transition: all var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  .chat-bubble.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+  .chat-bubble.ai { align-self: flex-start; background: var(--surface-2); border: 1px solid var(--rule); color: var(--text-2); border-bottom-left-radius: 4px; }
+  .chat-bubble .role-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; opacity: 0.7; display: block; margin-bottom: 4px; }
+  body[data-step="7"] .chat-bubble:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+  body[data-step="7"] .chat-bubble:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 500ms; }
+  body[data-step="7"] .chat-bubble:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 900ms; }
+  body[data-step="7"] .chat-bubble:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 1300ms; }
+  /* 电视里的 TRAE CN mock 界面 */
+  .mock-trae { position: absolute; inset: 0; padding: 20px; color: var(--surface-2); font-family: var(--font-mono); font-size: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .mock-trae .mt-tabbar { display: flex; gap: 10px; font-size: 11px; color: rgba(255,255,255,0.45); }
+  .mock-trae .mt-tabbar .active { color: var(--accent-glow); }
+  .mock-trae .mt-body { flex: 1; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  .mock-trae .mt-msg { padding: 8px 12px; border-radius: 8px; max-width: 85%; line-height: 1.55; }
+  .mock-trae .mt-msg.user { align-self: flex-end; background: rgba(30,58,138,0.55); color: #fff; font-family: var(--font-body); font-size: 13px; }
+  .mock-trae .mt-msg.ai { align-self: flex-start; background: rgba(240,243,248,0.12); color: var(--surface-2); font-family: var(--font-body); font-size: 13px; }
+  .mock-trae .mt-caret::after { content: "▌"; color: var(--accent-glow); animation: blink 1s step-end infinite; }
+  @keyframes blink { 0%,50%{opacity:1} 51%,100%{opacity:0} }
+
+  /* step 8：探究步骤卡片 —— 和 step 6 一样的纯 transition 方式，稳定可靠 */
+  .steps-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+  .step-8 .step-card { display: flex; align-items: center; gap: 18px; padding: 16px 22px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface-2); opacity: 0; transform: translateX(-28px); transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1), transform var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  .step-num { font-family: var(--font-display-en); font-style: italic; font-weight: 500; font-size: 36px; color: var(--accent); letter-spacing: -0.03em; line-height: 1; min-width: 56px; }
+  .step-text { font-family: var(--font-body); font-size: 18px; color: var(--text); }
+  body[data-step="8"] .step-8 .step-card:nth-child(1) { opacity: 1; transform: translateX(0); transition-delay: 100ms; }
+  body[data-step="8"] .step-8 .step-card:nth-child(2) { opacity: 1; transform: translateX(0); transition-delay: 400ms; }
+  body[data-step="8"] .step-8 .step-card:nth-child(3) { opacity: 1; transform: translateX(0); transition-delay: 700ms; }
+  body[data-step="8"] .step-8 .step-card:nth-child(4) { opacity: 1; transform: translateX(0); transition-delay: 1000ms; }
+
+  /* ═══════════════════════════════════════════════
+     STEP 9-12 — CHAPTER 3 RESEARCH（纯 transition 方式，和 step 6 同风格）
+  ═══════════════════════════════════════════════ */
+
+  /* 共享基础态：默认 opacity:0 + transform + transition */
+  .step-9  .ch-title,  .step-10 .ch-title, .step-11 .ch-title, .step-12 .ch-title,
+  .step-13 .ch-title, .step-14 .ch-title, .step-15 .ch-title, .step-16 .ch-title, .step-17 .ch-title {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1), transform var(--dur-slow) cubic-bezier(.2,.8,.2,1);
+  }
+  .step-9  .ch-headline,  .step-10 .ch-headline, .step-11 .ch-headline, .step-12 .ch-headline,
+  .step-13 .ch-headline, .step-14 .ch-headline, .step-15 .ch-headline, .step-16 .ch-headline, .step-17 .ch-headline {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1), transform var(--dur-slow) cubic-bezier(.2,.8,.2,1);
+  }
+  .step-9  .ch-headline.en,  .step-10 .ch-headline.en, .step-11 .ch-headline.en, .step-12 .ch-headline.en,
+  .step-13 .ch-headline.en, .step-14 .ch-headline.en, .step-15 .ch-headline.en, .step-16 .ch-headline.en, .step-17 .ch-headline.en {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1), transform var(--dur-slow) cubic-bezier(.2,.8,.2,1);
+  }
+
+  /* step 9 目标态 */
+  body[data-step="9"]  .step-9  .ch-title { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+  body[data-step="9"]  .step-9  .ch-headline { opacity: 1; transform: translateY(0); transition-delay: 350ms; }
+  body[data-step="9"]  .step-9  .ch-headline.en { opacity: 1; transform: translateY(0); transition-delay: 600ms; }
+
+  /* step 10 目标态 */
+  body[data-step="10"] .step-10 .ch-title { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+  body[data-step="10"] .step-10 .ch-headline { opacity: 1; transform: translateY(0); transition-delay: 350ms; }
+  body[data-step="10"] .step-10 .ch-headline.en { opacity: 1; transform: translateY(0); transition-delay: 600ms; }
+
+  /* step 11 目标态 */
+  body[data-step="11"] .step-11 .ch-title { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+  body[data-step="11"] .step-11 .ch-headline { opacity: 1; transform: translateY(0); transition-delay: 350ms; }
+  body[data-step="11"] .step-11 .ch-headline.en { opacity: 1; transform: translateY(0); transition-delay: 600ms; }
+
+  /* step 12 目标态 */
+  body[data-step="12"] .step-12 .ch-title { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+  body[data-step="12"] .step-12 .ch-headline { opacity: 1; transform: translateY(0); transition-delay: 350ms; }
+  body[data-step="12"] .step-12 .ch-headline.en { opacity: 1; transform: translateY(0); transition-delay: 600ms; }
+
+  /* step 13 目标态 */
+  body[data-step="13"] .step-13 .ch-title { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+  body[data-step="13"] .step-13 .ch-headline { opacity: 1; transform: translateY(0); transition-delay: 350ms; }
+  body[data-step="13"] .step-13 .ch-headline.en { opacity: 1; transform: translateY(0); transition-delay: 600ms; }
+
+  /* step 14 目标态 */
+  body[data-step="14"] .step-14 .ch-title { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+  body[data-step="14"] .step-14 .ch-headline { opacity: 1; transform: translateY(0); transition-delay: 350ms; }
+  body[data-step="14"] .step-14 .ch-headline.en { opacity: 1; transform: translateY(0); transition-delay: 600ms; }
+
+  /* step 15 目标态 */
+  body[data-step="15"] .step-15 .ch-title { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+  body[data-step="15"] .step-15 .ch-headline { opacity: 1; transform: translateY(0); transition-delay: 350ms; }
+  body[data-step="15"] .step-15 .ch-headline.en { opacity: 1; transform: translateY(0); transition-delay: 600ms; }
+
+  /* step 16 目标态 */
+  body[data-step="16"] .step-16 .ch-title { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+  body[data-step="16"] .step-16 .ch-headline { opacity: 1; transform: translateY(0); transition-delay: 350ms; }
+  body[data-step="16"] .step-16 .ch-headline.en { opacity: 1; transform: translateY(0); transition-delay: 600ms; }
+
+  /* step 17 目标态 */
+  body[data-step="17"] .step-17 .ch-title { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+  body[data-step="17"] .step-17 .ch-headline { opacity: 1; transform: translateY(0); transition-delay: 350ms; }
+  body[data-step="17"] .step-17 .ch-headline.en { opacity: 1; transform: translateY(0); transition-delay: 600ms; }
+
+  /* 工具芯片（step 9） */
+  .tool-row { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; opacity: 0; transform: translateY(20px); transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1), transform var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  body[data-step="9"] .step-9 .tool-row { opacity: 1; transform: translateY(0); transition-delay: 1100ms; }
+  .tool-chip { color: #fff; font-family: var(--font-body); font-size: 13px; font-weight: 500; padding: 8px 16px; border-radius: 20px; letter-spacing: 0.04em; box-shadow: 0 2px 0 rgba(10,31,61,0.1); }
+
+  /* ch-body（step 9、13） */
+  .step-9 .ch-body, .step-11 .ch-body, .step-13 .ch-body {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1), transform var(--dur-slow) cubic-bezier(.2,.8,.2,1);
+  }
+  body[data-step="9"]  .step-9  .ch-body { opacity: 1; transform: translateY(0); transition-delay: 850ms; }
+  body[data-step="11"] .step-11 .ch-body { opacity: 1; transform: translateY(0); transition-delay: 850ms; }
+  body[data-step="13"] .step-13 .ch-body { opacity: 1; transform: translateY(0); transition-delay: 850ms; }
+
+  /* 论文卡片（step 10） */
+  .paper-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+  .paper-card { display: grid; grid-template-columns: 72px 1fr; gap: 16px; padding: 14px 18px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface-2); opacity: 0; transform: translateY(16px); transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1), transform var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  body[data-step="10"] .step-10 .paper-card:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 900ms; }
+  body[data-step="10"] .step-10 .paper-card:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 1150ms; }
+  body[data-step="10"] .step-10 .paper-card:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 1400ms; }
+  .paper-year { font-family: var(--font-display-en); font-style: italic; font-size: 40px; font-weight: 500; color: var(--accent); letter-spacing: -0.03em; line-height: 1; }
+  .paper-title { grid-column: 2; grid-row: 1; font-family: var(--font-body); font-size: 17px; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 6px; }
+  .paper-meta { grid-column: 2; grid-row: 2; font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); letter-spacing: 0.1em; }
+
+  /* 下载进度条 */
+  .progress-demo { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+  .progress-row { display: grid; grid-template-columns: 88px 1fr 36px; align-items: center; gap: 12px; opacity: 0; transform: translateX(-12px); transition: all var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  [data-step="11"] .step-11 .progress-row:nth-child(1) { opacity: 1; transform: translateX(0); transition-delay: 1000ms; }
+  [data-step="11"] .step-11 .progress-row:nth-child(2) { opacity: 1; transform: translateX(0); transition-delay: 1250ms; }
+  [data-step="11"] .step-11 .progress-row:nth-child(3) { opacity: 1; transform: translateX(0); transition-delay: 1500ms; }
+  .pr-label { font-family: var(--font-mono); font-size: 12px; color: var(--text-mute); letter-spacing: 0.08em; }
+  .pr-bar { height: 6px; background: var(--rule); border-radius: 3px; overflow: hidden; }
+  .pr-fill { height: 100%; background: var(--accent); border-radius: 3px; }
+  .pr-pct { font-family: var(--font-mono); font-size: 12px; color: var(--accent); font-weight: 600; text-align: right; }
+  .hl { background: linear-gradient(180deg, transparent 55%, rgba(30,58,138,0.18) 55%); padding: 0 2px; font-weight: 600; color: var(--accent); }
+
+  /* 成因卡片 */
+  .cause-list { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+  .cause-card { display: grid; grid-template-columns: 48px 1fr; gap: 14px; padding: 16px 20px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface-2); opacity: 0; transform: translateX(-20px); transition: all var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  [data-step="12"] .step-12 .cause-card:nth-child(1) { opacity: 1; transform: translateX(0); transition-delay: 1000ms; }
+  [data-step="12"] .step-12 .cause-card:nth-child(2) { opacity: 1; transform: translateX(0); transition-delay: 1250ms; }
+  [data-step="12"] .step-12 .cause-card:nth-child(3) { opacity: 1; transform: translateX(0); transition-delay: 1500ms; }
+  .cause-num { font-family: var(--font-display-en); font-size: 28px; font-style: italic; color: var(--accent); line-height: 1; text-align: center; }
+  .cause-text b { display: block; font-family: var(--font-body); font-size: 17px; color: var(--text); margin-bottom: 4px; }
+  .cause-text span { font-family: var(--font-body); font-size: 14px; color: var(--text-mute); line-height: 1.55; }
+
+  /* ═══════════════════════════════════════════════
+     STEP 13-17 — CHAPTER 4 措施（沿用 split-layout + TV）
+  ═══════════════════════════════════════════════ */
+  body[data-step="13"] .step-13 { opacity: 1; }
+  body[data-step="14"] .step-14 { opacity: 1; }
+  body[data-step="15"] .step-15 { opacity: 1; }
+  body[data-step="16"] .step-16 { opacity: 1; }
+  body[data-step="17"] .step-17 { opacity: 1; }
+
+  /* ═══════════════════════════════════════════════
+     STEP 13-17 — 措施卡片 + ch-body + tool-row 目标态
+     （ch-title/ch-headline/ch-headline.en 已在上面统一）
+  ═══════════════════════════════════════════════ */
+
+  /* step 13 额外目标态 */
+  body[data-step="13"] .step-13 .tool-row { opacity: 1; transform: translateY(0); transition-delay: 1100ms; }
+
+  /* 措施卡片（step 14-17）基础态 */
+  .measure-card { display: grid; grid-template-columns: 56px 1fr; gap: 18px; padding: 18px 22px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface-2); opacity: 0; transform: translateY(20px); transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1), transform var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  body[data-step="14"] .step-14 .measure-card { opacity: 1; transform: translateY(0); transition-delay: 900ms; }
+  body[data-step="15"] .step-15 .measure-card { opacity: 1; transform: translateY(0); transition-delay: 900ms; }
+  body[data-step="16"] .step-16 .measure-card { opacity: 1; transform: translateY(0); transition-delay: 900ms; }
+  body[data-step="17"] .step-17 .measure-card { opacity: 1; transform: translateY(0); transition-delay: 900ms; }
+  .measure-icon { font-size: 36px; display: flex; align-items: center; justify-content: center; }
+  .measure-body b { display: block; font-family: var(--font-body); font-size: 18px; color: var(--text); margin-bottom: 6px; line-height: 1.35; }
+  .measure-body span { font-family: var(--font-body); font-size: 14px; color: var(--text-mute); line-height: 1.55; }
+
+  /* 措施配图占位框（留空让用户自己放图） */
+  .measure-img-placeholder {
+    width: 82%;
+    max-width: 520px;
+    aspect-ratio: 4 / 3;
+    border-radius: 14px;
+    border: 2px dashed rgba(30,58,138,0.3);
+    background: rgba(30,58,138,0.04);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 14px;
+    color: var(--accent); letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .measure-img {
+    width: 82%;
+    max-width: 520px;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 14px;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08);
+    display: block;
+  }
+  .tv-video { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
+  /* 修复：左右翻页热区(.click-left/.click-right, z-index:40)盖住视频导致无法点击播放。
+     把当前激活步骤里的视频抬到热区之上（仅激活步骤，避免隐藏步骤的透明视频挡点击） */
+  body[data-step="6"]  .step-6  .tv-video,
+  body[data-step="8"]  .step-8  .tv-video,
+  body[data-step="9"]  .step-9  .tv-video,
+  body[data-step="10"] .step-10 .tv-video,
+  body[data-step="11"] .step-11 .tv-video,
+  body[data-step="12"] .step-12 .tv-video,
+  body[data-step="13"] .step-13 .tv-video { position: relative; z-index: 41; }
+  /* 视频步骤的电视机加大：占满右栏宽度，屏幕比例改为 16:10 更贴近录屏，画面更大（STEP 7 是 UI 模型，不动） */
+  .step-6 .tv-frame, .step-8 .tv-frame, .step-9 .tv-frame, .step-10 .tv-frame,
+  .step-11 .tv-frame, .step-12 .tv-frame, .step-13 .tv-frame { width: 100%; }
+  .step-6 .tv-bezel, .step-8 .tv-bezel, .step-9 .tv-bezel, .step-10 .tv-bezel,
+  .step-11 .tv-bezel, .step-12 .tv-bezel, .step-13 .tv-bezel { aspect-ratio: 16 / 10; }
+
+  /* ═══════════════════════════════════════════════
+     STEP 18-20 — 总结 / 优势VS局限 / 团队收获（纯 transition）
+  ═══════════════════════════════════════════════ */
+
+  .centered { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 100px; gap: 28px; text-align: center; }
+
+  /* step 18 总结 */
+  .summary-wrap { display: flex; flex-direction: column; align-items: center; gap: 22px; opacity: 0; transform: translateY(20px); transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1), transform var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  body[data-step="18"] .step-18 .summary-wrap { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 10px; opacity: 0; transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  body[data-step="18"] .step-18 .summary-grid { opacity: 1; transition-delay: 700ms; }
+
+  /* step 19 VS 对比 */
+  .vs-wrap { display: flex; flex-direction: column; align-items: center; gap: 22px; opacity: 0; transform: translateY(20px); transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1), transform var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  body[data-step="19"] .step-19 .vs-wrap { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 10px; opacity: 0; transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  body[data-step="19"] .step-19 .vs-grid { opacity: 1; transition-delay: 700ms; }
+
+  /* step 20 团队收获 */
+  .wrap-wrap { display: flex; flex-direction: column; align-items: center; gap: 22px; opacity: 0; transform: translateY(20px); transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1), transform var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  body[data-step="20"] .step-20 .wrap-wrap { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+  .team-tags { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 10px; opacity: 0; transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  body[data-step="20"] .step-20 .team-tags { opacity: 1; transition-delay: 700ms; }
+
+  /* 共享样式类 */
+  .summ-col { border: 1px solid var(--rule); border-radius: 10px; padding: 18px 24px; background: var(--surface-2); display: flex; flex-direction: column; gap: 10px; min-width: 200px; }
+  .summ-label { font-family: var(--font-display-en); font-style: italic; font-size: 14px; color: var(--accent); letter-spacing: 0.15em; text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
+  .summ-item { font-family: var(--font-body); font-size: 15px; color: var(--text); text-align: center; font-weight: 500; }
+  .vs-col { border: 1px solid var(--rule); border-radius: 12px; padding: 24px 30px; text-align: left; min-width: 360px; }
+  .vs-adv { border-color: #a7c4ff; background: linear-gradient(135deg, rgba(30,58,138,0.04), var(--surface-2)); }
+  .vs-lim { border-color: #fca5a5; background: linear-gradient(135deg, rgba(185,28,28,0.04), var(--surface-2)); }
+  .vs-tag { font-family: var(--font-display-en); font-style: italic; font-size: 18px; margin-bottom: 14px; letter-spacing: 0.1em; }
+  .vs-adv .vs-tag { color: var(--accent); }
+  .vs-lim .vs-tag { color: #b91c1c; }
+  .vs-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  .vs-col li { font-family: var(--font-body); font-size: 15px; color: var(--text); padding-left: 18px; position: relative; line-height: 1.5; }
+  .vs-col li::before { content: "·"; position: absolute; left: 4px; color: var(--accent); font-weight: 700; }
+  .team-tag { font-family: var(--font-body); font-size: 16px; font-weight: 500; padding: 10px 22px; border-radius: 28px; border: 1px solid var(--rule); background: var(--surface-2); color: var(--text); letter-spacing: 0.02em; }
+
+  /* 最后三页：左文右图（思维导图） */
+  .map-split { position: absolute; inset: 0; display: grid; grid-template-columns: minmax(0, 44%) minmax(0, 1fr); gap: 44px; align-items: center; padding: 50px 76px 74px; }
+  .map-left { min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+  .map-right { min-width: 0; height: 100%; display: flex; align-items: center; justify-content: center; }
+  .mindmap { max-width: 100%; max-height: calc(min(100vh, 56.25vw) - 130px); display: block; border-radius: 12px; background: #f8fafc; box-shadow: 0 14px 40px rgba(10,31,61,0.16), 0 0 0 1px rgba(10,31,61,0.06); opacity: 0; transform: translateX(26px) scale(.985); transition: opacity var(--dur-slow) cubic-bezier(.2,.8,.2,1), transform var(--dur-slow) cubic-bezier(.2,.8,.2,1); }
+  body[data-step="18"] .step-18 .mindmap { opacity: 1; transform: none; transition-delay: 650ms; }
+  body[data-step="19"] .step-19 .mindmap { opacity: 1; transform: none; transition-delay: 650ms; }
+  body[data-step="20"] .step-20 .mindmap { opacity: 1; transform: none; transition-delay: 650ms; }
+  /* 左栏跟随左对齐，压缩以便与导图并排 */
+  .step-18 .summary-wrap, .step-19 .vs-wrap, .step-20 .wrap-wrap { align-items: flex-start; gap: 16px; }
+  .step-18 .ch-headline { font-size: 46px; }
+  .step-18 .summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .step-18 .summ-col { min-width: 0; padding: 12px 10px; }
+  .step-18 .summ-item { font-size: 13px; }
+  .step-19 .ch-headline.en-title { font-size: 44px; }
+  .step-19 .vs-grid { grid-template-columns: 1fr; gap: 14px; }
+  .step-19 .vs-col { min-width: 0; padding: 18px 20px; }
+  .step-20 .ch-headline { font-size: 52px; }
+  .step-20 .team-tags { justify-content: flex-start; }
+
+</style>
+</head>
+<body data-step="1">
+
+<div class="frame">
+  <div class="stage-wrap" id="stageWrap">
+
+    <div class="step-indicator" id="stepIndicator">STEP 01 / 20</div>
+    <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="click-left"  id="clickLeft"></div>
+    <div class="click-right" id="clickRight"></div>
+
+    <div class="stage" id="stage">
+
+      <!-- ══ STEP 1 — 钩子开场（原版不动） ══ -->
+      <div class="step-1">
+        <div class="step-1-label">当我们打开短视频 APP —</div>
+        <div class="platforms">
+          <div class="platform"><div class="logo-wrap logo-douyin"><img src="assets/douyin.svg" alt="抖音"></div><div class="platform-name">抖音 · DOUYIN</div></div>
+          <div class="platform"><div class="logo-wrap logo-bilibili"><img src="assets/bilibili.svg" alt="B站"></div><div class="platform-name">哔哩哔哩 · BILIBILI</div></div>
+          <div class="platform"><div class="logo-wrap logo-kuaishou"><img src="assets/kuaishou.svg" alt="快手"></div><div class="platform-name">快手 · KUAISHOU</div></div>
+        </div>
+      </div>
+
+      <!-- ══ STEP 2 — 手指滑动（原版不动） ══ -->
+      <div class="step-2">
+        <svg class="finger-swipe" viewBox="0 0 70 70" fill="none">
+          <path d="M22 40 C 22 28, 28 24, 34 28 L 36 30 L 36 24 C 36 20, 40 20, 40 24 L 40 30 L 44 28 C 48 26, 52 28, 50 32 L 50 42 C 50 48, 44 54, 38 54 C 30 54, 22 50, 22 44 Z" fill="var(--accent-glow)" stroke="var(--accent)" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M50 37 L 58 37 M 55 34 L 58 37 L 55 40" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        <div class="video-grid">
+          <div class="video-tile vt-1"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#ff6b6b,#ffd93d)"></div><span class="vt-author-name">街舞阿明</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">在解放碑跳了一晚上</div><div class="vt-duration">08:42</div></div>
+          <div class="video-tile vt-2"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#a8e6cf,#ffd3b6)"></div><span class="vt-author-name">喵星人日记</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">我家猫终于会弹钢琴了</div><div class="vt-duration">03:15</div></div>
+          <div class="video-tile vt-3"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#f7b733,#fc4a1a)"></div><span class="vt-author-name">深夜厨房</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">三分钟做好让女友流泪的面</div><div class="vt-duration">06:28</div></div>
+          <div class="video-tile vt-4"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#56ab2f,#a8e063)"></div><span class="vt-author-name">老徐走天下</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">虎跳峡徒步拍到了震撼日出</div><div class="vt-duration">15:02</div></div>
+          <div class="video-tile vt-5"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#ff9a9e,#fad0c4)"></div><span class="vt-author-name">阿宅的快乐</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">花三月工资买的手办 泪目</div><div class="vt-duration">09:37</div></div>
+          <div class="video-tile vt-6"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2)"></div><span class="vt-author-name">电竞老炮</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">路人局一把 36 杀 能上职业吗</div><div class="vt-duration">12:51</div></div>
+          <div class="video-tile vt-7"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#ff6b9d,#c44569)"></div><span class="vt-author-name">小美的化妆台</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">三分钟出门妆 手残党也能学会</div><div class="vt-duration">05:19</div></div>
+          <div class="video-tile vt-8"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c)"></div><span class="vt-author-name">球场老张</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">这球不进我吃篮球 结果</div><div class="vt-duration">04:06</div></div>
+          <div class="video-tile vt-9"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#43cea2,#185a9d)"></div><span class="vt-author-name">手作小艺</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">零基础做纸笔筒 超治愈</div><div class="vt-duration">07:44</div></div>
+          <div class="video-tile vt-10"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb)"></div><span class="vt-author-name">奇妙实验室</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">在家做水晶花园 全家看傻了</div><div class="vt-duration">08:09</div></div>
+          <div class="video-tile vt-11"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#11998e,#38ef7d)"></div><span class="vt-author-name">越野骑士</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">飞下 30 度陡坡摔三次</div><div class="vt-duration">11:23</div></div>
+          <div class="video-tile vt-12"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#ee9ca7,#ffdde1)"></div><span class="vt-author-name">老司机车库</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">70 年代法拉利 声浪值一套房</div><div class="vt-duration">14:58</div></div>
+          <div class="video-tile vt-13"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#ffecd2,#fcb69f)"></div><span class="vt-author-name">铲屎官小林</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">金毛把邻居家金毛带回来了</div><div class="vt-duration">02:47</div></div>
+          <div class="video-tile vt-14"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#373B44,#4286f4)"></div><span class="vt-author-name">墨池山人</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">写四十年书法 压箱底家伙事儿</div><div class="vt-duration">10:11</div></div>
+          <div class="video-tile vt-15"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#0f2027,#2c5364)"></div><span class="vt-author-name">星辰观察员</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">中国空间站实拍地球 泪目</div><div class="vt-duration">08:32</div></div>
+          <div class="video-tile vt-16"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#f6d365,#fda085)"></div><span class="vt-author-name">民谣小陈</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">大理客栈唱一晚上 老板免房费</div><div class="vt-duration">04:55</div></div>
+          <div class="video-tile vt-17"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#232526,#414345)"></div><span class="vt-author-name">理工男老王</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">花半年做外卖机器人 它居然</div><div class="vt-duration">13:29</div></div>
+          <div class="video-tile vt-18"><div class="vt-overlay"></div><div class="vt-author"><div class="vt-avatar" style="background:linear-gradient(135deg,#ff9a9e,#ffd775)"></div><span class="vt-author-name">厨房小野</span></div><div class="vt-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="vt-title">在家做三文鱼手握 比日料店好吃</div><div class="vt-duration">06:04</div></div>
+        </div>
+      </div>
+
+      <!-- ══ STEP 3 — 画面融合（原版不动） ══ -->
+      <div class="step-3">
+        <div class="fusion-grid" id="fusionGrid"></div>
+        <div class="fusion-overlay-text">画面越来越相似<br>内容越来越窄</div>
+      </div>
+
+      <!-- ══ STEP 4 — 信息大爆发（原版不动） ══ -->
+      <div class="step-4">
+        <div class="hero-line">信息<span class="accent">大爆发</span></div>
+        <div class="hero-line en">Information Overload,</div>
+        <div class="hero-line">内容却<span class="accent">越来越窄</span></div>
+      </div>
+
+      <!-- ══ STEP 5 — 信息茧房（原版不动） ══ -->
+      <div class="step-5">
+        <div class="cocoon-wrap">
+          <svg class="cocoon-spiral" viewBox="0 0 680 680" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="cf" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="var(--surface-2)"/>
+                <stop offset="70%" stop-color="var(--surface)" stop-opacity="0.6"/>
+                <stop offset="100%" stop-color="transparent"/>
+              </radialGradient>
+            </defs>
+            <circle cx="340" cy="340" r="175" fill="url(#cf)"/>
+            <g stroke="var(--accent)" stroke-width="1.5" fill="none">
+              <path d="M340 60 C480 80 580 180 600 300 C620 420 540 540 420 600 C300 660 160 600 100 480" opacity="0.40"/>
+              <path d="M340 120 C460 130 540 220 550 320 C560 420 490 510 390 560 C290 610 190 570 150 480" opacity="0.50"/>
+              <path d="M340 180 C430 190 490 270 500 350 C510 430 450 500 370 540 C290 580 210 550 180 480" opacity="0.60"/>
+              <path d="M340 240 C400 250 440 310 445 365 C450 420 410 470 355 500 C300 530 245 515 225 470" opacity="0.70"/>
+              <circle cx="340" cy="60" r="3" fill="var(--accent)" opacity="0.7"/>
+              <circle cx="600" cy="300" r="3" fill="var(--accent)" opacity="0.7"/>
+              <circle cx="420" cy="600" r="3" fill="var(--accent)" opacity="0.7"/>
+              <circle cx="100" cy="480" r="3" fill="var(--accent)" opacity="0.7"/>
+            </g>
+          </svg>
+          <div class="cocoon-title"><span class="line">信息</span><span class="line">茧房</span></div>
+          <div class="cocoon-subtitle">Filter Bubble</div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════
+           以下是 CHAPTER 2 BRAINSTORM —— 追加的 step 6/7/8
+           左文 + 右 4:3 电视框占位
+      ════════════════════════════════════════════ -->
+
+      <!-- STEP 6 — 开场 -->
+      <div class="step-6">
+        <div class="split-layout">
+          <div class="split-left">
+            <div class="ch-title">CHAPTER 02 · BRAINSTORM</div>
+            <div class="ch-headline">
+              <span class="line">先跟 AI</span>
+              <span class="line">聊一聊</span>
+            </div>
+            <div class="ch-headline.en">Let's talk it through —</div>
+            <div class="ch-body">
+              我用 TRAE CN 里的 <span style="color:var(--accent);font-weight:600">brainstorming</span> 技能，
+              跟它一对一聊信息茧房这个现象。
+            </div>
+          </div>
+          <div class="split-right">
+            <!-- ⚠️ 录屏占位：TRAE CN brainstorming 界面 -->
+            <div class="tv-frame">
+              <div class="tv-bezel">
+                <div class="tv-grille"><span></span><span></span><span></span></div>
+                <div class="tv-screen">
+                  <video class="tv-video" src="assets/videos/v1.mp4" controls muted playsinline preload="metadata"></video>
+                </div>
+                <div class="tv-controls">
+                  <div class="tv-knobs"><div class="tv-knob"></div><div class="tv-knob"></div></div>
+                  <div class="tv-led"></div>
+                  <div>CHANNEL 01</div>
+                </div>
+                <div class="tv-stand"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 7 — 对话气泡 -->
+      <div class="step-7">
+        <div class="split-layout">
+          <div class="split-left">
+            <div class="ch-title">DURING · CONVERSATION</div>
+            <div class="ch-headline.en">— 一对一对话 —</div>
+            <div class="chat-stream">
+              <div class="chat-bubble user"><span class="role-tag">YOU</span>什么是信息茧房？它是怎么形成的？</div>
+              <div class="chat-bubble ai"><span class="role-tag">AI</span>简单说，就是你点什么，平台就推什么……久而久之形成一个由兴趣和算法共同围成的窄圈。</div>
+              <div class="chat-bubble user"><span class="role-tag">YOU</span>那我怎么验证自己真的被"茧"住了？</div>
+              <div class="chat-bubble ai"><span class="role-tag">AI</span>我给你几个可操作的验证方法……</div>
+            </div>
+          </div>
+          <div class="split-right">
+            <div class="tv-frame">
+              <div class="tv-bezel">
+                <div class="tv-grille"><span></span><span></span><span></span></div>
+                <div class="tv-screen">
+                  <div class="mock-trae">
+                    <div class="mt-tabbar">
+                      <span>📄 探究.md</span>
+                      <span class="active">🤖 brainstorming</span>
+                      <span>🗂️ resources</span>
+                    </div>
+                    <div class="mt-body">
+                      <div class="mt-msg user">什么是信息茧房？</div>
+                      <div class="mt-msg ai">简单说，就是你点什么，平台就推什么…</div>
+                      <div class="mt-msg user">那怎么验证自己被"茧"住了？</div>
+                      <div class="mt-msg ai mt-caret">好问题，我给你几个方法…</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tv-controls">
+                  <div class="tv-knobs"><div class="tv-knob"></div><div class="tv-knob"></div></div>
+                  <div class="tv-led"></div>
+                  <div>CHANNEL 02</div>
+                </div>
+                <div class="tv-stand"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 8 — 探究步骤清单 -->
+      <div class="step-8">
+        <div class="split-layout">
+          <div class="split-left">
+            <div class="ch-title">AFTER · WHAT WE GOT</div>
+            <div class="ch-headline">
+              <span class="line">AI 帮我理出了</span>
+              <span class="line"><span class="accent">三步探究计划</span></span>
+            </div>
+            <div class="steps-list">
+              <div class="step-card"><div class="step-num">01</div><div class="step-text">文献查询</div></div>
+              <div class="step-card"><div class="step-num">02</div><div class="step-text">信息提取</div></div>
+              <div class="step-card"><div class="step-num">03</div><div class="step-text">结果验证</div></div>
+            </div>
+          </div>
+          <div class="split-right">
+            <div class="tv-frame">
+              <div class="tv-bezel">
+                <div class="tv-grille"><span></span><span></span><span></span></div>
+                <div class="tv-screen">
+                  <video class="tv-video" src="assets/videos/v2.mp4" controls muted playsinline preload="metadata"></video>
+                </div>
+                <div class="tv-controls">
+                  <div class="tv-knobs"><div class="tv-knob"></div><div class="tv-knob"></div></div>
+                  <div class="tv-led"></div>
+                  <div>CHANNEL 03</div>
+                </div>
+                <div class="tv-stand"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════
+           STEP 9-12 — CHAPTER 3 RESEARCH（追加在 step 8 之后）
+           左文 + 右 4:3 电视框占位
+      ════════════════════════════════════════════ -->
+
+      <!-- STEP 9 — 开场 -->
+      <div class="step-9">
+        <div class="split-layout">
+          <div class="split-left">
+            <div class="ch-title">CHAPTER 03 · RESEARCH</div>
+            <div class="ch-headline">
+              <span class="line">第二步</span>
+              <span class="line"><span class="accent">得找正经文献</span></span>
+            </div>
+            <div class="ch-headline.en">Sources matter —</div>
+            <div class="ch-body">
+              用 <b>知网研学</b> + <b>LeapSpace</b>，在 AI 辅助下检索相关论文。
+              还让 <b>Playwright</b> 做了一张文献搜集表，整理得清清楚楚。
+            </div>
+            <div class="tool-row">
+              <div class="tool-chip" style="background:linear-gradient(135deg,#1e3a8a,#3b5bb8);">知网研学</div>
+              <div class="tool-chip" style="background:linear-gradient(135deg,#3d3d3d,#6a6a7a);">LeapSpace</div>
+              <div class="tool-chip" style="background:linear-gradient(135deg,#157347,#2ea043);">Playwright</div>
+            </div>
+          </div>
+          <div class="split-right">
+            <div class="tv-frame">
+              <div class="tv-bezel">
+                <div class="tv-grille"><span></span><span></span><span></span></div>
+                <div class="tv-screen">
+                  <video class="tv-video" src="assets/videos/v3.mp4" controls muted playsinline preload="metadata"></video>
+                </div>
+                <div class="tv-controls">
+                  <div class="tv-knobs"><div class="tv-knob"></div><div class="tv-knob"></div></div>
+                  <div class="tv-led"></div>
+                  <div>CHANNEL 04</div>
+                </div>
+                <div class="tv-stand"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 10 — 文献搜集表 -->
+      <div class="step-10">
+        <div class="split-layout">
+          <div class="split-left">
+            <div class="ch-title">TOOL · PLAYWRIGHT</div>
+            <div class="ch-headline.en">— 49 篇文献 —</div>
+            <div class="paper-list">
+              <div class="paper-card">
+                <div class="paper-year">35</div>
+                <div class="paper-title">中国知网 · 中文文献</div>
+                <div class="paper-meta">PLAYWRIGHT 自动检索 · 按被引排序 · 抓取下载</div>
+              </div>
+              <div class="paper-card">
+                <div class="paper-year">14</div>
+                <div class="paper-title">LeapSpace · 外文文献</div>
+                <div class="paper-meta">INFORMATION COCOONS 主题检索 · 多篇并行阅读</div>
+              </div>
+              <div class="paper-card">
+                <div class="paper-year">49</div>
+                <div class="paper-title">合计 · 文献搜集表</div>
+                <div class="paper-meta">辅助阅读 → 提取成因 → 归纳三个核心成因</div>
+              </div>
+            </div>
+          </div>
+          <div class="split-right">
+            <div class="tv-frame">
+              <div class="tv-bezel">
+                <div class="tv-grille"><span></span><span></span><span></span></div>
+                <div class="tv-screen">
+                  <video class="tv-video" src="assets/videos/v4.mp4" controls muted playsinline preload="metadata"></video>
+                </div>
+                <div class="tv-controls">
+                  <div class="tv-knobs"><div class="tv-knob"></div><div class="tv-knob"></div></div>
+                  <div class="tv-led"></div>
+                  <div>CHANNEL 05</div>
+                </div>
+                <div class="tv-stand"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 11 — cnki-skill 自动下载 -->
+      <div class="step-11">
+        <div class="split-layout">
+          <div class="split-left">
+            <div class="ch-title">STEP 03 · AUTOMATE</div>
+            <div class="ch-headline">
+              <span class="line">cnki-skill</span>
+              <span class="line"><span class="accent">自动下载 + 辅助阅读</span></span>
+            </div>
+            <div class="ch-headline.en">AI-assisted reading —</div>
+            <div class="ch-body">
+              把检索到的论文 ID 喂给 cnki-skill，它自动下载 PDF、
+              提取关键段落、高亮<strong class="hl">核心成因</strong>和<strong class="hl">概念定义</strong>。
+            </div>
+            <div class="progress-demo">
+              <div class="progress-row">
+                <span class="pr-label">Paper 01</span>
+                <div class="pr-bar"><div class="pr-fill" style="width:100%"></div></div>
+                <span class="pr-pct">✓</span>
+              </div>
+              <div class="progress-row">
+                <span class="pr-label">Paper 02</span>
+                <div class="pr-bar"><div class="pr-fill" style="width:100%"></div></div>
+                <span class="pr-pct">✓</span>
+              </div>
+              <div class="progress-row">
+                <span class="pr-label">Paper 03</span>
+                <div class="pr-bar"><div class="pr-fill" style="width:70%"></div></div>
+                <span class="pr-pct">70%</span>
+              </div>
+            </div>
+          </div>
+          <div class="split-right">
+            <div class="tv-frame">
+              <div class="tv-bezel">
+                <div class="tv-grille"><span></span><span></span><span></span></div>
+                <div class="tv-screen">
+                  <video class="tv-video" src="assets/videos/v5.mp4" controls muted playsinline preload="metadata"></video>
+                </div>
+                <div class="tv-controls">
+                  <div class="tv-knobs"><div class="tv-knob"></div><div class="tv-knob"></div></div>
+                  <div class="tv-led"></div>
+                  <div>CHANNEL 06</div>
+                </div>
+                <div class="tv-stand"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 12 — 三个核心成因 -->
+      <div class="step-12">
+        <div class="split-layout">
+          <div class="split-left">
+            <div class="ch-title">EXTRACTED · THREE KEY CAUSES</div>
+            <div class="ch-headline">
+              <span class="line">提取了</span>
+              <span class="line"><span class="accent">三个核心成因</span></span>
+            </div>
+            <div class="cause-list">
+              <div class="cause-card"><div class="cause-num">①</div><div class="cause-text"><b>算法多样性不足</b><span>—— 平台推荐模型偏好高频点击，主动筛选掉边缘内容</span></div></div>
+              <div class="cause-card"><div class="cause-num">②</div><div class="cause-text"><b>用户惰性强化</b><span>—— 越看越窄 → 越窄越看，形成自我维持的窄圈</span></div></div>
+              <div class="cause-card"><div class="cause-num">③</div><div class="cause-text"><b>公共议题缺席</b><span>—— 商业化推荐体系挤掉公共信息、多样性内容</span></div></div>
+            </div>
+          </div>
+          <div class="split-right">
+            <div class="tv-frame">
+              <div class="tv-bezel">
+                <div class="tv-grille"><span></span><span></span><span></span></div>
+                <div class="tv-screen">
+                  <video class="tv-video" src="assets/videos/v6.mp4" controls muted playsinline preload="metadata"></video>
+                </div>
+                <div class="tv-controls">
+                  <div class="tv-knobs"><div class="tv-knob"></div><div class="tv-knob"></div></div>
+                  <div class="tv-led"></div>
+                  <div>CHANNEL 07</div>
+                </div>
+                <div class="tv-stand"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════
+           STEP 13-20 — CHAPTER 4 RESULT VERIFICATION + MEASURES + WRAP-UP
+      ════════════════════════════════════════════ -->
+
+      <!-- STEP 13 — 第五页 结果验证 -->
+      <div class="step-13">
+        <div class="split-layout">
+          <div class="split-left">
+            <div class="ch-title">CHAPTER 04 · VERIFY</div>
+            <div class="ch-headline">
+              <span class="line">AI 工具有局限</span>
+              <span class="line"><span class="accent">所以我们再验证一遍</span></span>
+            </div>
+            <div class="ch-headline.en">Further verification —</div>
+            <div class="ch-body">
+              用 <b>八爪鱼采集器</b> 在知乎平台采集公众讨论，
+              印证我们从文献里得到的三个核心成因；
+              再通过分词工具生成 <b>词频分布图</b>。
+            </div>
+            <div class="tool-row">
+              <div class="tool-chip" style="background:linear-gradient(135deg,#b45309,#d97706);">八爪鱼采集器</div>
+              <div class="tool-chip" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);">知乎采集</div>
+              <div class="tool-chip" style="background:linear-gradient(135deg,#4c1d95,#7c3aed);">词频分析</div>
+            </div>
+          </div>
+          <div class="split-right">
+            <div class="tv-frame">
+              <div class="tv-bezel">
+                <div class="tv-grille"><span></span><span></span><span></span></div>
+                <div class="tv-screen">
+                  <video class="tv-video" src="assets/videos/v7.mp4" controls muted playsinline preload="metadata"></video>
+                </div>
+                <div class="tv-controls">
+                  <div class="tv-knobs"><div class="tv-knob"></div><div class="tv-knob"></div></div>
+                  <div class="tv-led"></div>
+                  <div>CHANNEL 08</div>
+                </div>
+                <div class="tv-stand"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 14 — 第六页 措施 1 修改平台推荐 -->
+      <div class="step-14">
+        <div class="split-layout">
+          <div class="split-left">
+            <div class="ch-title">MEASURE 01 · DIVERSIFY</div>
+            <div class="ch-headline">
+              <span class="line">措施 ①</span>
+              <span class="line"><span class="accent">给推荐加上多样性约束</span></span>
+            </div>
+            <div class="ch-headline.en">Diversity constraint —</div>
+            <div class="measure-card">
+              <div class="measure-icon">🧬</div>
+              <div class="measure-body">
+                <b>主动混入不同观点、不同来源、不同主题的内容</b>
+                <span>平台在推荐算法中加入多样性惩罚项，避免连续推荐同类内容</span>
+              </div>
+            </div>
+          </div>
+          <div class="split-right"><img class="measure-img" src="assets/measure-1.jpg" alt="给推荐加上多样性约束"></div>
+        </div>
+      </div>
+
+      <!-- STEP 15 — 第七页 措施 2 理解算法机理 -->
+      <div class="step-15">
+        <div class="split-layout">
+          <div class="split-left">
+            <div class="ch-title">MEASURE 02 · UNDERSTAND</div>
+            <div class="ch-headline">
+              <span class="line">措施 ②</span>
+              <span class="line"><span class="accent">看懂算法为什么推给你</span></span>
+            </div>
+            <div class="ch-headline.en">Know your algorithm —</div>
+            <div class="measure-card">
+              <div class="measure-icon">🔍</div>
+              <div class="measure-body">
+                <b>怎么调整推荐 · 怎么关闭个性化推荐</b>
+                <span>理解推荐机理，才能有针对性地打破窄圈</span>
+              </div>
+            </div>
+          </div>
+          <div class="split-right"><img class="measure-img" src="assets/measure-2.jpg" alt="看懂算法为什么推给你"></div>
+        </div>
+      </div>
+
+      <!-- STEP 16 — 第八页 措施 3 主动跳出同温层 -->
+      <div class="step-16">
+        <div class="split-layout">
+          <div class="split-left">
+            <div class="ch-title">MEASURE 03 · EXIT</div>
+            <div class="ch-headline">
+              <span class="line">措施 ③</span>
+              <span class="line"><span class="accent">主动跳出同温层</span></span>
+            </div>
+            <div class="ch-headline.en">Step out —</div>
+            <div class="measure-card">
+              <div class="measure-icon">🚪</div>
+              <div class="measure-body">
+                <b>刻意去看一点不同立场的内容</b>
+                <span>不要总点同一类信息，点一次不同立场，算法就会重新学习</span>
+              </div>
+            </div>
+          </div>
+          <div class="split-right"><img class="measure-img" src="assets/measure-3.jpg" alt="主动跳出同温层"></div>
+        </div>
+      </div>
+
+      <!-- STEP 17 — 第九页 措施 4 平台侧治理 -->
+      <div class="step-17">
+        <div class="split-layout">
+          <div class="split-left">
+            <div class="ch-title">MEASURE 04 · GOVERN</div>
+            <div class="ch-headline">
+              <span class="line">措施 ④</span>
+              <span class="line"><span class="accent">平台侧治理</span></span>
+            </div>
+            <div class="ch-headline.en">Platform-level governance —</div>
+            <div class="measure-card">
+              <div class="measure-icon">🏛️</div>
+              <div class="measure-body">
+                <b>算法透明度 + 多样性评估 + 外部监督</b>
+                <span>让公共信息和不同来源的内容进入推荐池</span>
+              </div>
+            </div>
+          </div>
+          <div class="split-right"><img class="measure-img" src="assets/measure-4.jpg" alt="平台侧治理"></div>
+        </div>
+      </div>
+
+      <!-- STEP 18 — 第十页 总结 -->
+      <div class="step-18 map-split">
+        <div class="map-left">
+        <div class="summary-wrap">
+          <div class="ch-title">SUMMARY</div>
+          <div class="ch-headline"><span class="line">3 个 AI 工具</span><span class="line">3 个 AI 技能</span><span class="line">1 个辅助工具</span></div>
+          <div class="ch-headline.en">Ten aspects of information literacy —</div>
+          <div class="summary-grid">
+            <div class="summ-col">
+              <div class="summ-label">AI 工具</div>
+              <div class="summ-item">TRAE CN</div>
+              <div class="summ-item">知网研学</div>
+              <div class="summ-item">LeapSpace</div>
+            </div>
+            <div class="summ-col">
+              <div class="summ-label">AI 技能</div>
+              <div class="summ-item">cnki-skill</div>
+              <div class="summ-item">deep-research</div>
+              <div class="summ-item">office-plugin</div>
+            </div>
+            <div class="summ-col">
+              <div class="summ-label">辅助工具</div>
+              <div class="summ-item">Playwright</div>
+              <div class="summ-item">八爪鱼采集</div>
+              <div class="summ-item">词频分析</div>
+            </div>
+          </div>
+        </div>
+        </div>
+        <div class="map-right">
+          <img class="mindmap" src="assets/mindmaps/mm-01.png" alt="AI 协作学习的工具矩阵思维导图">
+        </div>
+      </div>
+
+      <!-- STEP 19 — 第十一页 优势 VS 局限 -->
+      <div class="step-19 map-split">
+        <div class="map-left">
+        <div class="vs-wrap">
+          <div class="ch-title">AI · STRENGTHS VS LIMITATIONS</div>
+          <div class="ch-headline en-title">优势 &amp; 局限</div>
+          <div class="vs-grid">
+            <div class="vs-col vs-adv">
+              <div class="vs-tag">✓ 优势</div>
+              <ul>
+                <li>多篇文献<strong>并行阅读</strong></li>
+                <li>数秒内完成<strong>定义归纳</strong>与要素提炼</li>
+                <li>大幅提升探究<strong>效率</strong></li>
+              </ul>
+            </div>
+            <div class="vs-col vs-lim">
+              <div class="vs-tag">✗ 局限</div>
+              <ul>
+                <li>容易偏向<strong>高频表述</strong></li>
+                <li>可能合并<strong>不同层面</strong>的概念</li>
+                <li>丢失细微差异 · <strong>不能直接采信</strong></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        </div>
+        <div class="map-right">
+          <img class="mindmap" src="assets/mindmaps/mm-02.png" alt="AI 辅助研究的优势与局限思维导图">
+        </div>
+      </div>
+
+      <!-- STEP 20 — 第十二页 团队收获 -->
+      <div class="step-20 map-split">
+        <div class="map-left">
+        <div class="wrap-wrap">
+          <div class="ch-title">OUR GAINS</div>
+          <div class="ch-headline"><span class="line">团队的收获</span><span class="line"><span class="accent">和体会</span></span></div>
+          <div class="ch-headline.en">念稿配图 —</div>
+          <div class="team-tags">
+            <span class="team-tag">信息检索</span>
+            <span class="team-tag">文献管理</span>
+            <span class="team-tag">AI 协作</span>
+            <span class="team-tag">批判性思维</span>
+            <span class="team-tag">成果验证</span>
+            <span class="team-tag">跨工具联动</span>
+          </div>
+        </div>
+        </div>
+        <div class="map-right">
+          <img class="mindmap" src="assets/mindmaps/mm-03.png" alt="团队的收获与能力成长思维导图">
+        </div>
+      </div>
+
+    </div><!-- /stage -->
+
+    <div class="next-hint">点击推进 · CLICK OR →</div>
+  </div>
+</div>
+
+<script>
+  const TOTAL_STEPS = 20;
+  const stepLabels = [
+    "STEP 01 / 20 · 问题引入",
+    "STEP 02 / 20 · 刷了十分钟",
+    "STEP 03 / 20 · 画面融合",
+    "STEP 04 / 20 · 信息大爆发",
+    "STEP 05 / 20 · 信息茧房",
+    "STEP 06 / 20 · 第二章 聊一聊",
+    "STEP 07 / 20 · 对话气泡",
+    "STEP 08 / 20 · 三步探究计划",
+    "STEP 09 / 20 · 第三章 得找正经文献",
+    "STEP 10 / 20 · 49 篇文献",
+    "STEP 11 / 20 · cnki-skill 自动下载",
+    "STEP 12 / 20 · 三个核心成因",
+    "STEP 13 / 20 · 结果验证 八爪鱼",
+    "STEP 14 / 20 · 措施①多样性约束",
+    "STEP 15 / 20 · 措施②理解算法机理",
+    "STEP 16 / 20 · 措施③跳出同温层",
+    "STEP 17 / 20 · 措施④平台侧治理",
+    "STEP 18 / 20 · 总结",
+    "STEP 19 / 20 · 优势 VS 局限",
+    "STEP 20 / 20 · 团队的收获",
+  ];
+
+  // step 3 融合网格（原版不动）
+  const grid = document.getElementById('fusionGrid');
+  const prompts = ['Chinese street dance teen','Cute cat piano','Chinese chef wok','Mountain sunrise','Anime figure unboxing','Gaming cyberpunk','Makeup tutorial','Street basketball','DIY craft paper','Kids science slime','Mountain bike trail','Classic sportscar coastal','Golden retriever butterfly','Chinese calligraphy brush','Astronaut orbit earth','Acoustic guitar cafe','Robot prototype workshop','Sushi chef salmon','Vintage car','Dog park funny','Video game review','Food vlogger','Mountain hike','Makeup routine','Coding tutorial','Travel vlog','Street food','Skate park','Guitar lesson','Plant care','Interior design','Sneaker review','Cat compilation','Dog compilation','Travel tips','Fitness tutorial','Book review','Movie recap','DIY home','Pet tricks'];
+  for (let i = 0; i < 40; i++) {
+    const p = prompts[i % prompts.length];
+    const t = document.createElement('div');
+    t.className = 'fusion-tile';
+    t.style.backgroundImage = `url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(p + ' photo realistic')}&image_size=square_hd')`;
+    t.style.backgroundSize = 'cover';
+    t.style.backgroundPosition = 'center';
+    t.style.transitionDelay = (i * 20) + 'ms';
+    grid.appendChild(t);
+  }
+
+  let currentStep = 1;
+  const body = document.body;
+  const stepIndicator = document.getElementById('stepIndicator');
+  const progressFill = document.getElementById('progressFill');
+
+  function updateUI() {
+    body.setAttribute('data-step', currentStep);
+    stepIndicator.textContent = stepLabels[currentStep - 1];
+    progressFill.style.width = ((currentStep - 1) / (TOTAL_STEPS - 1) * 100) + '%';
+    if (currentStep === 3) {
+      setTimeout(() => document.querySelectorAll('.fusion-tile').forEach(el => el.classList.add('fade')), 2200);
+    } else {
+      document.querySelectorAll('.fusion-tile').forEach(el => el.classList.remove('fade'));
+    }
+    // 自动播放当前步骤的视频，其余暂停并回到开头（muted 状态下浏览器允许自动播放）
+    document.querySelectorAll('.tv-video').forEach(v => {
+      if (v.closest('.step-' + currentStep)) {
+        v.play().catch(() => {});
+      } else {
+        v.pause();
+        v.currentTime = 0;
+      }
+    });
+  }
+
+  // 视频播完后收起原生控件（不留下整条进度条），再次点击画面才重新显示并重播
+  document.querySelectorAll('.tv-video').forEach(v => {
+    v.addEventListener('play', () => { v.controls = true; });
+    v.addEventListener('ended', () => { v.controls = false; });
+    v.addEventListener('click', () => {
+      if (!v.controls) { v.controls = true; v.play().catch(() => {}); }
+    });
+  });
+
+  function nextStep() { if (currentStep < TOTAL_STEPS) { currentStep++; updateUI(); } }
+  function prevStep() { if (currentStep > 1) { currentStep--; updateUI(); } }
+
+  document.getElementById('clickLeft').addEventListener('click', (e) => { e.stopPropagation(); prevStep(); });
+  document.getElementById('clickRight').addEventListener('click', (e) => { e.stopPropagation(); nextStep(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') nextStep();
+    if (e.key === 'ArrowLeft') prevStep();
+  });
+  let wheelLocked = false;
+  document.addEventListener('wheel', (e) => {
+    if (wheelLocked) return;
+    wheelLocked = true;
+    if (e.deltaY > 0) nextStep(); else prevStep();
+    setTimeout(() => wheelLocked = false, 500);
+  }, { passive: true });
+
+  updateUI();
+</script>
+</body>
+</html>
